@@ -50,6 +50,11 @@
 #include "TColor.h"
 #include "TROOT.h"
 
+// for stopping the job
+#include "GaudiKernel/Bootstrap.h"
+#include "GaudiKernel/IEventProcessor.h"
+#include "GaudiKernel/ISvcLocator.h"
+
 #define endmsg std::endl
 
 using namespace dd4hep;
@@ -201,8 +206,11 @@ void k4GaudiCED::processInput() {
 
   signal(SIGWINCH, SIG_IGN);
   int c = getchar();
-  if (c == 'q' || c == 'Q' || c == 3) { // quit if the user pressed q or strg+c (3 = strg+c)
-    exit(0);
+
+  if (c == 'q' || c == 'Q' || c == 3) { // end the job after this event if the user pressed q or strg+c (3 = strg+c)
+    if (Gaudi::svcLocator()->as<IEventProcessor>()->stopRun().isFailure()) {
+      error() << "Could not stop the job" << endmsg;
+    }
   }
   info() << "--------- END ---------------\n";
 }
