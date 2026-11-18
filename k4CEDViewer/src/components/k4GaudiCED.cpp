@@ -174,8 +174,16 @@ void k4GaudiCED::sendEvent() {
 void k4GaudiCED::processInput() {
   int i = 0;
 
-  // Drop previously registered double-clicks, as they could point to the wrong objecty
+  // Drop previously registered double-clicks, as they could point to the wrong object
   while (ced_selected_id_noblock() != -1) {
+  }
+
+  // Always lower output level to info while waiting for input so double-clicks are logged
+  unsigned& logLevel = GlobalLog::instance().level();
+  const unsigned oldLogLevel = logLevel;
+
+  if (logLevel > LogLevel::Info) {
+    logLevel = LogLevel::Info;
   }
 
   info() << "Double click for picking. Press <ENTER> for the next event." << endmsg;
@@ -207,6 +215,8 @@ void k4GaudiCED::processInput() {
       }
     }
   }
+
+  logLevel = oldLogLevel;
 
   signal(SIGWINCH, SIG_IGN);
   int c = getchar();
