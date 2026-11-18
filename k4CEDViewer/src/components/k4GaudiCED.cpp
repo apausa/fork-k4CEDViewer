@@ -141,11 +141,15 @@ void k4GaudiCED::init(const void* proc) {
   instance()->_last = proc;
 }
 
+void k4GaudiCED::clearEvent() {
+  ced_new_event();
+
+  PickingHandler::instance().clear();
+}
+
 void k4GaudiCED::newEvent(const void* proc) {
   if (proc == instance()->_first) {
-    ced_new_event();
-
-    PickingHandler::instance().clear();
+    clearEvent();
   }
 }
 

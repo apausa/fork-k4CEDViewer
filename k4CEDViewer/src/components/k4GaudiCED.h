@@ -145,6 +145,10 @@ public:
    */
   static void init(const void* proc);
 
+  // Clears the previous event.
+  static void clearEvent();
+
+  // Starts a new event. Only the first algorithm does this, so all algorithms draw into the same event.
   static void newEvent(const void* proc);
 
   /** To be called by every processor that uses CED in processEvent() after drawing everything.
