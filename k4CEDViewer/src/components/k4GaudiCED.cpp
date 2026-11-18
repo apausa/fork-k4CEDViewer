@@ -110,6 +110,11 @@ k4GaudiCED* k4GaudiCED::instance() {
 }
 
 void k4GaudiCED::connect() {
+  if (instance()->_connected) {
+    return;
+  }
+  instance()->_connected = true;
+
   char *port, *host;
   port = getenv("CED_PORT");
   host = getenv("CED_HOST");

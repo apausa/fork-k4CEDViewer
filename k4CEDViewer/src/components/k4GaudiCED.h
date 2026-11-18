@@ -138,7 +138,7 @@ public:
 
   //  LCEvent* _currEvent=NULL;
 
-  // Sets up the CED client and registers its element types.
+  // Sets up the CED client and registers its element types. Only the first call does anything.
   static void connect();
 
   /** To be called by every processor that uses CED in init().
@@ -233,6 +233,7 @@ protected:
 
   const void* _first = NULL;
   const void* _last = NULL;
+  bool _connected = false;
 
   // // helper method to draw hit collections by type
   // static void drawHitCollectionsByType(LCEvent* event, const char* type, int marker, int size,
