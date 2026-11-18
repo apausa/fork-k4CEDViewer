@@ -37,10 +37,6 @@
 #include <termios.h>
 #include <time.h>
 
-// for kbhit
-#include <sys/select.h>
-#include <termios.h>
-
 // for detector drawing (Thorben Quast)
 #include "DD4hep/DD4hepUnits.h"
 #include "DD4hep/Detector.h"
@@ -66,15 +62,6 @@ k4GaudiCED* k4GaudiCED::_me = 0;
 std::vector<std::string> k4GaudiCED::_descs(CED_MAX_LAYER, ""); // layer descriptions
 
 //--------------------------------------------------------------------------------------------------------
-
-int PickingHandler::kbhit(void) {
-  // http://stackoverflow.com/questions/448944/c-non-blocking-keyboard-input#448982
-  struct timeval tv = {0L, 0L};
-  fd_set fds;
-  FD_ZERO(&fds);
-  FD_SET(0, &fds);
-  return select(1, &fds, NULL, NULL, &tv);
-}
 
 void k4GaudiCED::add_layer_description(const std::string& desc, int layerID) {
   std::string tmp;
@@ -191,10 +178,10 @@ void k4GaudiCED::processInput() {
 
   signal(SIGWINCH, SIG_IGN);
 
-  while (!PickingHandler::kbhit()) {
-    //            while(!poll(pfd,1,0)){
+  /// Wait for keyboard input, and every 100ms without input check for double-clicks.
+  struct pollfd keyboard = {0, POLLIN, 0};
 
-    usleep(100000); // micro seconds
+  while (poll(&keyboard, 1, 100) <= 0) {
 
     int id = ced_selected_id_noblock();
 

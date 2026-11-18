@@ -119,11 +119,6 @@ public:
     _map[colID] = fun;
   }
 
-  /** Returns 1 if a key was been pressed, otherwise 0.
-   * (Should be not part of PickingHandler)
-   */
-  static int kbhit(void);
-
   ~PickingHandler() {};
 };
 
