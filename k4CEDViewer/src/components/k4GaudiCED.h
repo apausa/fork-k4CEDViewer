@@ -154,9 +154,12 @@ public:
   // Sends what has been drawn so far from the event to glced.
   static void sendEvent();
 
+  // Waits for user input. Double-clicked objects are printed while waiting.
+  static void processInput();
+
   /** To be called by every processor that uses CED in processEvent() after drawing everything.
-   *  Actually draws the event. The flag waitForKeyboard indicates if after an event is drawn
-   *  an input from the keyboard is expected (waitForKeyboard=1) or not (waitForKeyboard=0).
+   * The flag waitForKeyboard indicates if after an event is drawn,
+   * an input from the keyboard is expected (waitForKeyboard=1) or not (waitForKeyboard=0).
    */
   static void draw(const void* proc, int waitForKeyboard = 1);
 

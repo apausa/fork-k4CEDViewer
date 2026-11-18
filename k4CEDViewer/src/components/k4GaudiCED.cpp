@@ -166,48 +166,52 @@ void k4GaudiCED::sendEvent() {
   ced_send_event();
 }
 
-void k4GaudiCED::draw(const void* proc, int waitForKeyboard) {
+void k4GaudiCED::processInput() {
   int i = 0;
 
+  info() << "Double click for picking. Press <ENTER> for the next event." << endmsg;
+  // test:
+
+  signal(SIGWINCH, SIG_IGN);
+
+  while (!PickingHandler::kbhit()) {
+    //            while(!poll(pfd,1,0)){
+
+    usleep(100000); // micro seconds
+
+    int id = ced_selected_id_noblock();
+
+    if (id >= 0) {
+
+      debug() << "debug: got id: " << id << endmsg;
+
+      if (id == 0) {
+
+        warning() << "Picking nothing, or an object with ID 0!" << endmsg;
+
+      } else {
+
+        PickingHandler::instance().printObject(id);
+
+        ced_picking_text("test1 test2 test3", i++);
+        ced_send_event();
+      }
+    }
+  }
+
+  signal(SIGWINCH, SIG_IGN);
+  int c = getchar();
+  if (c == 'q' || c == 'Q' || c == 3) { // quit if the user pressed q or strg+c (3 = strg+c)
+    exit(0);
+  }
+  info() << "--------- END ---------------\n";
+}
+
+void k4GaudiCED::draw(const void* proc, int waitForKeyboard) {
   if (proc == instance()->_last) {
     sendEvent();
     if (waitForKeyboard == 1) {
-      info() << "Double click for picking. Press <ENTER> for the next event." << endmsg;
-      // test:
-
-      signal(SIGWINCH, SIG_IGN);
-
-      while (!PickingHandler::kbhit()) {
-        //            while(!poll(pfd,1,0)){
-
-        usleep(100000); // micro seconds
-
-        int id = ced_selected_id_noblock();
-
-        if (id >= 0) {
-
-          debug() << "debug: got id: " << id << endmsg;
-
-          if (id == 0) {
-
-            warning() << "Picking nothing, or an object with ID 0!" << endmsg;
-
-          } else {
-
-            PickingHandler::instance().printObject(id);
-
-            ced_picking_text("test1 test2 test3", i++);
-            ced_send_event();
-          }
-        }
-      }
-
-      signal(SIGWINCH, SIG_IGN);
-      int c = getchar();
-      if (c == 'q' || c == 'Q' || c == 3) { // quit if the user pressed q or strg+c (3 = strg+c)
-        exit(0);
-      }
-      info() << "--------- END ---------------\n";
+      processInput();
     }
   }
 }
