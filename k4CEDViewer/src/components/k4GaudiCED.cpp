@@ -109,29 +109,33 @@ k4GaudiCED* k4GaudiCED::instance() {
   return _me;
 }
 
+void k4GaudiCED::connect() {
+  char *port, *host;
+  port = getenv("CED_PORT");
+  host = getenv("CED_HOST");
+  if ((port == NULL || port[0] == 0) && (host == NULL || host[0] == 0)) {
+    ced_client_init("localhost", 7286);
+  } else if (port == NULL || port[0] == 0) {
+    info() << "Use user defined host " << host << endmsg;
+    ced_client_init(host, 7286);
+  } else if (host == NULL || host[0] == 0) {
+    info() << "Use user defined port " << port << endmsg;
+    ced_client_init("localhost", atoi(port));
+  } else {
+    info() << "Use user defined host " << host << ", port " << port << endmsg;
+    ced_client_init(host, atoi(port));
+  }
+
+  ced_register_elements();
+}
+
 void k4GaudiCED::init(const void* proc) {
 
   if (instance()->_first == 0) {
 
     instance()->_first = proc;
 
-    char *port, *host;
-    port = getenv("CED_PORT");
-    host = getenv("CED_HOST");
-    if ((port == NULL || port[0] == 0) && (host == NULL || host[0] == 0)) {
-      ced_client_init("localhost", 7286);
-    } else if (port == NULL || port[0] == 0) {
-      info() << "Use user defined host " << host << endmsg;
-      ced_client_init(host, 7286);
-    } else if (host == NULL || host[0] == 0) {
-      info() << "Use user defined port " << port << endmsg;
-      ced_client_init("localhost", atoi(port));
-    } else {
-      info() << "Use user defined host " << host << ", port " << port << endmsg;
-      ced_client_init(host, atoi(port));
-    }
-
-    ced_register_elements();
+    connect();
   }
 
   instance()->_last = proc;
@@ -145,7 +149,6 @@ void k4GaudiCED::newEvent(const void* proc) {
   }
 }
 
-// hauke hoelbe modify 08.02.2010
 void k4GaudiCED::draw(const void* proc, int waitForKeyboard) {
   int i = 0;
 

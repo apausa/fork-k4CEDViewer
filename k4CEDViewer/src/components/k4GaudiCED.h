@@ -138,7 +138,10 @@ public:
 
   //  LCEvent* _currEvent=NULL;
 
-  /** To be called by every processor that uses CED in intit().
+  // Sets up the CED client and registers its element types.
+  static void connect();
+
+  /** To be called by every processor that uses CED in init().
    */
   static void init(const void* proc);
 
