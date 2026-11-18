@@ -174,6 +174,10 @@ void k4GaudiCED::sendEvent() {
 void k4GaudiCED::processInput() {
   int i = 0;
 
+  // Drop previously registered double-clicks, as they could point to the wrong objecty
+  while (ced_selected_id_noblock() != -1) {
+  }
+
   info() << "Double click for picking. Press <ENTER> for the next event." << endmsg;
   // test:
 
