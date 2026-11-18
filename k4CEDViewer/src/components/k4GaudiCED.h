@@ -151,6 +151,9 @@ public:
   // Starts a new event. Only the first algorithm does this, so all algorithms draw into the same event.
   static void newEvent(const void* proc);
 
+  // Sends what has been drawn so far from the event to glced.
+  static void sendEvent();
+
   /** To be called by every processor that uses CED in processEvent() after drawing everything.
    *  Actually draws the event. The flag waitForKeyboard indicates if after an event is drawn
    *  an input from the keyboard is expected (waitForKeyboard=1) or not (waitForKeyboard=0).

@@ -153,15 +153,19 @@ void k4GaudiCED::newEvent(const void* proc) {
   }
 }
 
+void k4GaudiCED::sendEvent() {
+  //    ced_draw_event();
+  k4GaudiCED::write_layer_description();
+  // ced_picking_text("test1 test2 test3");
+
+  ced_send_event();
+}
+
 void k4GaudiCED::draw(const void* proc, int waitForKeyboard) {
   int i = 0;
 
   if (proc == instance()->_last) {
-    //    ced_draw_event();
-    k4GaudiCED::write_layer_description();
-    // ced_picking_text("test1 test2 test3");
-
-    ced_send_event();
+    sendEvent();
     if (waitForKeyboard == 1) {
       info() << "Double click for picking. Press <ENTER> for the next event." << endmsg;
       // test:
