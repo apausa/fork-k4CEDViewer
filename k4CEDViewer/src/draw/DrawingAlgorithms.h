@@ -1,6 +1,7 @@
 #pragma once
 
 #include "edm4hep/CalorimeterHitCollection.h"
+#include "edm4hep/ClusterCollection.h"
 #include "edm4hep/MCParticleCollection.h"
 #include "edm4hep/ReconstructedParticleCollection.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
@@ -85,6 +86,21 @@ struct TracksParams {
   unsigned colorScheme = 0;
 };
 
+// Parameters for drawing Clusters.
+struct ClustersParams {
+  int layer = 8;
+  int size = 2;
+  int marker = 0;
+  unsigned colorScheme = 10;
+  bool drawEllipsoidForPFOClusters = false;
+  bool colorEnergy = false;
+  bool colorEnergyAuto = false;
+  double colorEnergyMin = 0.;
+  double colorEnergyMax = 10.;
+  double colorEnergySaturation = 0.8;
+  double colorEnergyValue = 0.8;
+};
+
 // Draws one SimTrackerHit collection.
 void drawSimTrackerHits(const edm4hep::SimTrackerHitCollection& col, const SimTrackerHitsParams& p);
 
@@ -110,5 +126,8 @@ void drawMCParticles(const edm4hep::MCParticleCollection& col, const std::string
 
 // Draws one Track collection. layerDescription is added to the layer if any track is drawn.
 void drawTracks(const edm4hep::TrackCollection& col, const std::string& layerDescription, const TracksParams& p);
+
+// Draws one Cluster collection, optionally with an ellipsoid per cluster.
+void drawClusters(const edm4hep::ClusterCollection& col, const ClustersParams& p);
 
 } // namespace k4ced
