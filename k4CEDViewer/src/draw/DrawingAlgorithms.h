@@ -5,6 +5,7 @@
 #include "edm4hep/ReconstructedParticleCollection.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
+#include "edm4hep/TrackCollection.h"
 #include "edm4hep/TrackerHit3DCollection.h"
 #include "edm4hep/TrackerHitPlaneCollection.h"
 #include "edm4hep/VertexCollection.h"
@@ -73,6 +74,17 @@ struct MCParticlesParams {
   std::string hcalEndcapName = "HcalEndcap";
 };
 
+// Parameters for drawing Tracks.
+struct TracksParams {
+  int layer = 5;
+  int size = 3;
+  int marker = 0;
+  int drawHelixForTracks = 1; // -1: none, 0: default, 1: atIP, 2: atFirstHit, 3: atLastHit, 4: atCalorimeter
+  float lineThickness = 1.;
+  bool useColorForHelixTracks = false; // 0: disabled (lightgrey), 1: enabled
+  unsigned colorScheme = 0;
+};
+
 // Draws one SimTrackerHit collection.
 void drawSimTrackerHits(const edm4hep::SimTrackerHitCollection& col, const SimTrackerHitsParams& p);
 
@@ -95,5 +107,8 @@ void drawJets(const edm4hep::ReconstructedParticleCollection& col, const JetsPar
 // Draws one MCParticle collection. layerDescription is added to the layer if any particle is drawn.
 void drawMCParticles(const edm4hep::MCParticleCollection& col, const std::string& layerDescription,
                      const MCParticlesParams& p);
+
+// Draws one Track collection. layerDescription is added to the layer if any track is drawn.
+void drawTracks(const edm4hep::TrackCollection& col, const std::string& layerDescription, const TracksParams& p);
 
 } // namespace k4ced
