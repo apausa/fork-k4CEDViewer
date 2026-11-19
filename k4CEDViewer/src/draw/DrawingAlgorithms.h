@@ -101,6 +101,24 @@ struct ClustersParams {
   double colorEnergyValue = 0.8;
 };
 
+// Parameters for drawing ReconstructedParticles.
+struct ReconstructedParticlesParams {
+  int layer = 9;
+  int size = 2;
+  int marker = 0;
+  bool drawHelixForPFOs = true;
+  float lineThickness = 1.;
+  bool useColorForHelixTracks = false;
+  unsigned colorScheme = 10;
+  bool drawEllipsoidForPFOClusters = false;
+  bool colorByEnergy = false;
+  bool colorByEnergyAuto = false;
+  double colorByEnergyMin = 0.;
+  double colorByEnergyMax = 10.;
+  double colorByEnergySaturation = 0.8;
+  double colorByEnergyValue = 0.8;
+};
+
 // Draws one SimTrackerHit collection.
 void drawSimTrackerHits(const edm4hep::SimTrackerHitCollection& col, const SimTrackerHitsParams& p);
 
@@ -129,5 +147,9 @@ void drawTracks(const edm4hep::TrackCollection& col, const std::string& layerDes
 
 // Draws one Cluster collection, optionally with an ellipsoid per cluster.
 void drawClusters(const edm4hep::ClusterCollection& col, const ClustersParams& p);
+
+// Draws one ReconstructedParticle collection: the hits of its clusters and tracks, and a helix for charged ones.
+void drawReconstructedParticles(const edm4hep::ReconstructedParticleCollection& col,
+                                const ReconstructedParticlesParams& p);
 
 } // namespace k4ced
