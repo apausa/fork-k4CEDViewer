@@ -3,6 +3,8 @@
 #include "edm4hep/CalorimeterHitCollection.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
+#include "edm4hep/TrackerHit3DCollection.h"
+#include "edm4hep/TrackerHitPlaneCollection.h"
 #include "edm4hep/VertexCollection.h"
 
 namespace k4ced {
@@ -36,7 +38,15 @@ struct CalorimeterHitsParams {
   int layer = 12;
   int size = 2;
   int marker = 0;
-  int color = 0xee0000;
+  int color = 0xee0000; // #F00 (red)
+};
+
+// Parameters for drawing TrackerHits.
+struct TrackerHitsParams {
+  int layer = 11;
+  int size = 2;
+  int marker = 0;
+  int color = 0xee0000; // #F00 (red)
 };
 
 // Draws one SimTrackerHit collection.
@@ -50,5 +60,9 @@ void drawVertices(const edm4hep::VertexCollection& col, const VerticesParams& p,
 
 // Draws one CalorimeterHit collection.
 void drawCalorimeterHits(const edm4hep::CalorimeterHitCollection& col, const CalorimeterHitsParams& p);
+
+// Draws one TrackerHit3D or TrackerHitPlane collection.
+template <class Collection>
+void drawTrackerHits(const Collection& col, const TrackerHitsParams& p);
 
 } // namespace k4ced
