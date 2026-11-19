@@ -1,6 +1,7 @@
 #pragma once
 
 #include "edm4hep/CalorimeterHitCollection.h"
+#include "edm4hep/MCParticleCollection.h"
 #include "edm4hep/ReconstructedParticleCollection.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
@@ -59,6 +60,19 @@ struct JetsParams {
   std::string ecalEndcapName = "EcalEndcap";
 };
 
+// Parameters for drawing MCParticles.
+struct MCParticlesParams {
+  int layer = 0;
+  int size = 3;
+  double mcpECut = 0.01; // GeV
+  bool usingParticleGun = false;
+  bool drawMCParticlesCreatedInSimulation = false;
+  std::string ecalBarrelName = "EcalBarrel";
+  std::string ecalEndcapName = "EcalEndcap";
+  std::string hcalBarrelName = "HcalBarrel";
+  std::string hcalEndcapName = "HcalEndcap";
+};
+
 // Draws one SimTrackerHit collection.
 void drawSimTrackerHits(const edm4hep::SimTrackerHitCollection& col, const SimTrackerHitsParams& p);
 
@@ -75,7 +89,11 @@ void drawCalorimeterHits(const edm4hep::CalorimeterHitCollection& col, const Cal
 template <class Collection>
 void drawTrackerHits(const Collection& col, const TrackerHitsParams& p);
 
-// Draws one Jet collection (ReconstructedParticles), with each jet as a cone.
+// Draws one Jet collection, with each jet as a cone.
 void drawJets(const edm4hep::ReconstructedParticleCollection& col, const JetsParams& p);
+
+// Draws one MCParticle collection. layerDescription is added to the layer if any particle is drawn.
+void drawMCParticles(const edm4hep::MCParticleCollection& col, const std::string& layerDescription,
+                     const MCParticlesParams& p);
 
 } // namespace k4ced
