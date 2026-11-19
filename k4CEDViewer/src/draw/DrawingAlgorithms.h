@@ -1,11 +1,14 @@
 #pragma once
 
 #include "edm4hep/CalorimeterHitCollection.h"
+#include "edm4hep/ReconstructedParticleCollection.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 #include "edm4hep/TrackerHit3DCollection.h"
 #include "edm4hep/TrackerHitPlaneCollection.h"
 #include "edm4hep/VertexCollection.h"
+
+#include <string>
 
 namespace k4ced {
 
@@ -49,6 +52,13 @@ struct TrackerHitsParams {
   int color = 0xee0000; // #F00 (red)
 };
 
+// Parameters for drawing Jets.
+struct JetsParams {
+  int layer = 4;
+  std::string ecalBarrelName = "EcalBarrel";
+  std::string ecalEndcapName = "EcalEndcap";
+};
+
 // Draws one SimTrackerHit collection.
 void drawSimTrackerHits(const edm4hep::SimTrackerHitCollection& col, const SimTrackerHitsParams& p);
 
@@ -64,5 +74,8 @@ void drawCalorimeterHits(const edm4hep::CalorimeterHitCollection& col, const Cal
 // Draws one TrackerHit3D or TrackerHitPlane collection.
 template <class Collection>
 void drawTrackerHits(const Collection& col, const TrackerHitsParams& p);
+
+// Draws one Jet collection (ReconstructedParticles), with each jet as a cone.
+void drawJets(const edm4hep::ReconstructedParticleCollection& col, const JetsParams& p);
 
 } // namespace k4ced
