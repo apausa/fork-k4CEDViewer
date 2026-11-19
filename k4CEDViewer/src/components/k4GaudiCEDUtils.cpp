@@ -59,7 +59,7 @@ std::ostream& warning() {
 
 CalorimeterDrawParams getCalorimeterParameters(dd4hep::Detector& theDetector, std::string name, bool selfCall) {
 
-  CalorimeterDrawParams params;
+  CalorimeterDrawParams params{};
   if (selfCall)
     name[1] = tolower(name[1]);
   const std::vector<dd4hep::DetElement>& calorimeters = theDetector.detectors("calorimeter");
