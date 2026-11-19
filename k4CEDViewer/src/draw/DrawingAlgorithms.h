@@ -1,5 +1,6 @@
 #pragma once
 
+#include "edm4hep/CalorimeterHitCollection.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 #include "edm4hep/VertexCollection.h"
@@ -30,6 +31,14 @@ struct VerticesParams {
   unsigned colorScheme = 12;
 };
 
+// Parameters for drawing CalorimeterHits.
+struct CalorimeterHitsParams {
+  int layer = 12;
+  int size = 2;
+  int marker = 0;
+  int color = 0xee0000;
+};
+
 // Draws one SimTrackerHit collection.
 void drawSimTrackerHits(const edm4hep::SimTrackerHitCollection& col, const SimTrackerHitsParams& p);
 
@@ -38,5 +47,8 @@ void drawSimCalorimeterHits(const edm4hep::SimCalorimeterHitCollection& col, con
 
 // Draws one Vertex collection.
 void drawVertices(const edm4hep::VertexCollection& col, const VerticesParams& p, unsigned colorCode);
+
+// Draws one CalorimeterHit collection.
+void drawCalorimeterHits(const edm4hep::CalorimeterHitCollection& col, const CalorimeterHitsParams& p);
 
 } // namespace k4ced
