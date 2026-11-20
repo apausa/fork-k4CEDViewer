@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+#include "DrawingAlgorithms.h"
 #include "edm4hep/CalorimeterHitCollection.h"
 #include "edm4hep/MCParticle.h"
 #include "k4CEDColors.h"
@@ -30,6 +31,20 @@
 
 using namespace k4ced;
 
+void k4ced::drawCalorimeterHits(const edm4hep::CalorimeterHitCollection& col, const CalorimeterHitsParams& p) {
+  unsigned myColID = PickingHandler::instance().colID() * k4ced::IDFactor;
+  printfun f = PrintEDM4hep<edm4hep::CalorimeterHitCollection>(col);
+
+  PickingHandler::instance().registerFunctor(myColID / IDFactor, f);
+
+  for (int i = 0, n = col.size(); i < n; i++) {
+    auto h = col.at(i);
+    int id = myColID + h.id().index;
+
+    ced_hit_ID(h.getPosition()[0], h.getPosition()[1], h.getPosition()[2], p.marker, p.layer, p.size, p.color, id);
+  }
+}
+
 struct DrawCalorimeterHits final
     : k4FWCore::Consumer<void(const std::vector<const edm4hep::CalorimeterHitCollection*>&)> {
   DrawCalorimeterHits(const std::string& name, ISvcLocator* svcLoc)
@@ -38,10 +53,12 @@ struct DrawCalorimeterHits final
     k4GaudiCED::init(this);
   }
 
-  Gaudi::Property<int> layer{this, "layer", 12, "layer to draw CalorimeterHits "};
-  Gaudi::Property<int> size{this, "size", 2, "size for drawning  CalorimeterHits "};
-  Gaudi::Property<int> marker{this, "marker", 0, "marker for drawning  CalorimeterHits "};
-  Gaudi::Property<int> color{this, "color", 0xee0000, "color for drawning  CalorimeterHits (default: 0xee0000)"};
+  static constexpr CalorimeterHitsParams defaults{};
+
+  Gaudi::Property<int> layer{this, "layer", defaults.layer, "layer to draw CalorimeterHits "};
+  Gaudi::Property<int> size{this, "size", defaults.size, "size for drawning  CalorimeterHits "};
+  Gaudi::Property<int> marker{this, "marker", defaults.marker, "marker for drawning  CalorimeterHits "};
+  Gaudi::Property<int> color{this, "color", defaults.color, "color for drawning  CalorimeterHits (default: 0xee0000)"};
 
   //===========================================================================================
 
@@ -66,20 +83,10 @@ struct DrawCalorimeterHits final
 
     k4GaudiCED::add_layer_description(sstr.str(), layer);
 
+    const CalorimeterHitsParams params{.layer = layer, .size = size, .marker = marker, .color = color};
+
     for (const auto* col : collections) {
-
-      unsigned myColID = PickingHandler::instance().colID() * k4ced::IDFactor;
-      printfun f = PrintEDM4hep<edm4hep::CalorimeterHitCollection>(*col);
-      PickingHandler::instance().registerFunctor(myColID / IDFactor, f);
-
-      for (int i = 0, n = col->size(); i < n; i++) {
-
-        auto h = col->at(i);
-
-        int id = myColID + h.id().index;
-
-        ced_hit_ID(h.getPosition()[0], h.getPosition()[1], h.getPosition()[2], marker, layer, size, color, id);
-      }
+      drawCalorimeterHits(*col, params);
     }
     k4GaudiCED::draw(this, 1);
   }

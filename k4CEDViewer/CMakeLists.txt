@@ -37,7 +37,7 @@ Gaudi_add_module(k4CEDViewerPlugins
                  EDM4HEP::edm4hep
                  )
 
-target_include_directories(k4CEDViewerPlugins PRIVATE src/components)
+target_include_directories(k4CEDViewerPlugins PRIVATE src/components src/draw)
 
 install(TARGETS k4CEDViewerPlugins
   EXPORT ${CMAKE_PROJECT_NAME}Targets
