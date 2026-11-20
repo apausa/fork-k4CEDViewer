@@ -22,6 +22,7 @@
 
 // --- DD4hep ---
 #include "DD4hep/DD4hepUnits.h"
+#include "DD4hep/DetType.h"
 #include "DD4hep/Detector.h"
 #include "DDRec/DetectorData.h"
 #include "DDRec/Vector3D.h"
@@ -81,7 +82,22 @@ struct DrawParameters {
   int Layer;
 };
 
-CalorimeterDrawParams getCalorimeterParameters(dd4hep::Detector& theDetector, std::string name, bool selfCall = false);
+// ECalBarrel: calorimeter + electromagnetic + barrel
+constexpr unsigned ecalBarrelType =
+    dd4hep::DetType::CALORIMETER | dd4hep::DetType::ELECTROMAGNETIC | dd4hep::DetType::BARREL;
+
+// ECalEndcap: calorimeter + electromagnetic + endcap
+constexpr unsigned ecalEndcapType =
+    dd4hep::DetType::CALORIMETER | dd4hep::DetType::ELECTROMAGNETIC | dd4hep::DetType::ENDCAP;
+
+// HCalBarrel: calorimeter + hadronic + barrel
+constexpr unsigned hcalBarrelType = dd4hep::DetType::CALORIMETER | dd4hep::DetType::HADRONIC | dd4hep::DetType::BARREL;
+
+// HCalEndcap: calorimeter + hadronic + endcap
+constexpr unsigned hcalEndcapType = dd4hep::DetType::CALORIMETER | dd4hep::DetType::HADRONIC | dd4hep::DetType::ENDCAP;
+
+// Dynamically estimates the calorimeter size from these types
+CalorimeterDrawParams getCalorimeterParameters(dd4hep::Detector& theDetector, unsigned type);
 
 double calculateTrackLength(const CalorimeterDrawParams& barrel, const CalorimeterDrawParams& endcap, double x,
                             double y, double z, double px, double py, double pz, double rel_X0 = 0.5);

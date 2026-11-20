@@ -57,42 +57,45 @@ std::ostream& warning() {
   return (null_stream);
 }
 
-CalorimeterDrawParams getCalorimeterParameters(dd4hep::Detector& theDetector, std::string name, bool selfCall) {
+CalorimeterDrawParams getCalorimeterParameters(dd4hep::Detector& theDetector, unsigned type) {
 
   CalorimeterDrawParams params{};
-  if (selfCall)
-    name[1] = tolower(name[1]);
-  const std::vector<dd4hep::DetElement>& calorimeters = theDetector.detectors("calorimeter");
-  dd4hep::DetElement calo;
-  for (unsigned i = 0, n = calorimeters.size(); i < n; ++i) {
-    if ((std::string)calorimeters[i].name() == name) {
-      calo = calorimeters[i];
-      break;
-    }
+
+  // Find calorimeter from type
+  const auto calorimeters = theDetector.detectors(type, dd4hep::DetType::AUXILIARY | dd4hep::DetType::FORWARD);
+
+  if (calorimeters.empty()) {
+    info() << "Cannot find a calorimeter with type flags " << type << " -> cannot draw particles" << endmsg;
+
+    params.delta_z = -1; // no length --> no drawing
+
+    return params;
   }
+
+  const dd4hep::DetElement& calo = calorimeters[0];
   dd4hep::rec::LayeredCalorimeterData* caloGeo;
+
+  // Find measurements from dd4hep
   try {
     caloGeo = calo.extension<dd4hep::rec::LayeredCalorimeterData>();
   } catch (std::runtime_error& e) {
-    if (!selfCall)
-      return getCalorimeterParameters(theDetector, name, true);
-    else {
-      info() << "Cannot find detector data for  " << name << " -> cannot draw particles" << endmsg;
-      params.delta_z = -1; // no spatial extension --> no drawing
-      return params;
-    }
+    info() << "Cannot find detector data for  " << calo.name() << " -> cannot draw particles" << endmsg;
+    params.delta_z = -1; // no length --> no drawing
+
+    return params;
   }
-  if (caloGeo->layoutType == dd4hep::rec::LayeredCalorimeterData::BarrelLayout) {
-    params.r_inner = caloGeo->extent[0] / dd4hep::mm;
-    params.delta_r = caloGeo->extent[1] / dd4hep::mm - params.r_inner;
-    params.z_0 = 0.;
-    params.delta_z = caloGeo->extent[3] / dd4hep::mm;
-  } else {
-    params.r_inner = caloGeo->extent[0] / dd4hep::mm;
-    params.delta_r = caloGeo->extent[1] / dd4hep::mm - params.r_inner;
-    params.z_0 = caloGeo->extent[2] / dd4hep::mm;
-    params.delta_z = (caloGeo->extent[3] / dd4hep::mm - params.z_0); // we are interested in the full length!
-    // CEDGeoTube only requires half length as an argument
+
+  if (caloGeo->layoutType ==
+      dd4hep::rec::LayeredCalorimeterData::BarrelLayout) {             // assign calorimeter barrel parameters
+    params.r_inner = caloGeo->extent[0] / dd4hep::mm;                  // - inner radius
+    params.delta_r = caloGeo->extent[1] / dd4hep::mm - params.r_inner; // - radial thickness
+    params.z_0 = 0.;                                                   // - centered at z=0
+    params.delta_z = caloGeo->extent[3] / dd4hep::mm;                  // - half length
+  } else {                                                             // assign calorimeter endcap parameters
+    params.r_inner = caloGeo->extent[0] / dd4hep::mm;                  // - inner radius
+    params.delta_r = caloGeo->extent[1] / dd4hep::mm - params.r_inner; // - radial thickness
+    params.z_0 = caloGeo->extent[2] / dd4hep::mm;                      // - start in z
+    params.delta_z = (caloGeo->extent[3] / dd4hep::mm - params.z_0);   // - thickness in z
   }
 
   return params;
