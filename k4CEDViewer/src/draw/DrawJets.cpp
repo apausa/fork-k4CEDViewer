@@ -48,8 +48,8 @@ void k4ced::drawJets(const edm4hep::ReconstructedParticleCollection& col, const 
   int color = int(RGBAcolor[2] * (15 * 16 + 15)) + int(RGBAcolor[1] * (15 * 16 + 15)) * 16 * 16 +
               int(RGBAcolor[0] * (15 * 16 + 15)) * 16 * 16 * 16 * 16;
 
-  CalorimeterDrawParams ecalBarrelParams = getCalorimeterParameters(theDetector, p.ecalBarrelName);
-  CalorimeterDrawParams ecalEndcapParams = getCalorimeterParameters(theDetector, p.ecalEndcapName);
+  CalorimeterDrawParams ecalBarrelParams = getCalorimeterParameters(theDetector, ecalBarrelType);
+  CalorimeterDrawParams ecalEndcapParams = getCalorimeterParameters(theDetector, ecalEndcapType);
 
   //------------------------
   for (auto jet : col) {
@@ -123,13 +123,9 @@ struct DrawJets final : k4FWCore::Consumer<void(const edm4hep::ReconstructedPart
     k4GaudiCED::init(this);
   }
 
-  static inline const JetsParams defaults{};
+  static constexpr JetsParams defaults{};
 
   Gaudi::Property<int> layer{this, "layer", defaults.layer, "layer to draw ReconstructedParticles "};
-  Gaudi::Property<std::string> m_ecalBarrelName{this, "EcalBarrelName", defaults.ecalBarrelName,
-                                                "name of ecal barrel detector "};
-  Gaudi::Property<std::string> m_ecalEndcapName{this, "EcalEndcapName", defaults.ecalEndcapName,
-                                                "name of ecal endcap detector "};
   // Gaudi::Property<int> size{this, "size", 2, "size for drawning  ReconstructedParticles "};
   // Gaudi::Property<int> marker{this, "marker", 0, "marker for drawning  ReconstructedParticles "};
 
@@ -148,7 +144,7 @@ struct DrawJets final : k4FWCore::Consumer<void(const edm4hep::ReconstructedPart
     // only one registration for all jets in CEDViewer
     k4GaudiCED::add_layer_description(inputLocations(0)[0], layer);
 
-    const JetsParams params{.layer = layer, .ecalBarrelName = m_ecalBarrelName, .ecalEndcapName = m_ecalEndcapName};
+    const JetsParams params{.layer = layer};
 
     drawJets(col, params);
 

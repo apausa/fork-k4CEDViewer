@@ -58,8 +58,6 @@ struct TrackerHitsParams {
 // Parameters for drawing Jets.
 struct JetsParams {
   int layer = 4;
-  std::string ecalBarrelName = "EcalBarrel";
-  std::string ecalEndcapName = "EcalEndcap";
 };
 
 // Parameters for drawing MCParticles.
@@ -69,10 +67,6 @@ struct MCParticlesParams {
   double mcpECut = 0.01; // GeV
   bool usingParticleGun = false;
   bool drawMCParticlesCreatedInSimulation = false;
-  std::string ecalBarrelName = "EcalBarrel";
-  std::string ecalEndcapName = "EcalEndcap";
-  std::string hcalBarrelName = "HcalBarrel";
-  std::string hcalEndcapName = "HcalEndcap";
 };
 
 // Parameters for drawing Tracks.

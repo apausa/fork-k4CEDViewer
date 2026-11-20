@@ -41,21 +41,10 @@ void k4ced::drawMCParticles(const edm4hep::MCParticleCollection& col, const std:
   //------------------------
   // get some calorimeter parameters for drawing the lines and helices
 
-  // could directly get the calorimeter in question - yet this would need some error handling ....
-
-  // dd4hep::DetElement ecalBarrel =  theDetector.detectors( (dd4hep::DetType::CALORIMETER | dd4hep::DetType::BARREL |
-  // dd4hep::DetType::ELECTROMAGNETIC ), dd4hep::DetType::AUXILIARY )[0] ; dd4hep::DetElement ecalEndcap =
-  // theDetector.detectors( (dd4hep::DetType::CALORIMETER | dd4hep::DetType::ENDCAP | dd4hep::DetType::ELECTROMAGNETIC
-  // ), dd4hep::DetType::AUXILIARY )[0] ; dd4hep::DetElement hcalBarrel =  theDetector.detectors(
-  // (dd4hep::DetType::CALORIMETER | dd4hep::DetType::BARREL |  dd4hep::DetType::HADRONIC ),
-  // dd4hep::DetType::AUXILIARY )[0] ; dd4hep::DetElement hcalEndcap =  theDetector.detectors(
-  // (dd4hep::DetType::CALORIMETER | dd4hep::DetType::ENDCAP |  dd4hep::DetType::HADRONIC ),
-  // dd4hep::DetType::AUXILIARY )[0] ;
-
-  CalorimeterDrawParams ecalBarrelParams = getCalorimeterParameters(theDetector, p.ecalBarrelName);
-  CalorimeterDrawParams ecalEndcapParams = getCalorimeterParameters(theDetector, p.ecalEndcapName);
-  CalorimeterDrawParams hcalBarrelParams = getCalorimeterParameters(theDetector, p.hcalBarrelName);
-  CalorimeterDrawParams hcalEndcapParams = getCalorimeterParameters(theDetector, p.hcalEndcapName);
+  CalorimeterDrawParams ecalBarrelParams = getCalorimeterParameters(theDetector, ecalBarrelType);
+  CalorimeterDrawParams ecalEndcapParams = getCalorimeterParameters(theDetector, ecalEndcapType);
+  CalorimeterDrawParams hcalBarrelParams = getCalorimeterParameters(theDetector, hcalBarrelType);
+  CalorimeterDrawParams hcalEndcapParams = getCalorimeterParameters(theDetector, hcalEndcapType);
 
   //-----------------------
   for (edm4hep::MCParticle mcp : col) {
@@ -151,7 +140,7 @@ struct DrawMCParticles final : k4FWCore::Consumer<void(const edm4hep::MCParticle
 
   std::vector<DrawParameters> _drawParameters;
 
-  static inline const MCParticlesParams defaults{};
+  static constexpr MCParticlesParams defaults{};
 
   Gaudi::Property<int> layer{this, "layer", defaults.layer, "layer to draw MCParticles "};
   Gaudi::Property<int> size{this, "size", defaults.size, "size for drawning  MCParticles "};
@@ -161,15 +150,6 @@ struct DrawMCParticles final : k4FWCore::Consumer<void(const edm4hep::MCParticle
   Gaudi::Property<bool> drawMCParticlesCreatedInSimulation{this, "drawMCParticlesCreatedInSimulation",
                                                            defaults.drawMCParticlesCreatedInSimulation,
                                                            "draw particles created in simulation ? "};
-
-  Gaudi::Property<std::string> m_ecalBarrelName{this, "EcalBarrelName", defaults.ecalBarrelName,
-                                                "name of ecal barrel detector "};
-  Gaudi::Property<std::string> m_ecalEndcapName{this, "EcalEndcapName", defaults.ecalEndcapName,
-                                                "name of ecal endcap detector "};
-  Gaudi::Property<std::string> m_hcalBarrelName{this, "HcalBarrelName", defaults.hcalBarrelName,
-                                                "name of hcal barrel detector "};
-  Gaudi::Property<std::string> m_hcalEndcapName{this, "HcalEndcapName", defaults.hcalEndcapName,
-                                                "name of hcal endcap detector "};
 
   //===========================================================================================
 
@@ -187,11 +167,7 @@ struct DrawMCParticles final : k4FWCore::Consumer<void(const edm4hep::MCParticle
                                    .size = size,
                                    .mcpECut = mcpECut,
                                    .usingParticleGun = usingParticleGun,
-                                   .drawMCParticlesCreatedInSimulation = drawMCParticlesCreatedInSimulation,
-                                   .ecalBarrelName = m_ecalBarrelName,
-                                   .ecalEndcapName = m_ecalEndcapName,
-                                   .hcalBarrelName = m_hcalBarrelName,
-                                   .hcalEndcapName = m_hcalEndcapName};
+                                   .drawMCParticlesCreatedInSimulation = drawMCParticlesCreatedInSimulation};
 
     drawMCParticles(col, inputLocations(0)[0], params);
 
