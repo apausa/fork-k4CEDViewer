@@ -14,4 +14,7 @@ std::vector<std::pair<std::string, const podio::CollectionBase*>> getEventStoreC
 // Draws one collection with the default parameters of its type
 bool drawCollection(const std::string& name, const podio::CollectionBase& coll);
 
+// Draws every collection from the Gaudi event store
+void drawEventStore();
+
 } // namespace k4ced

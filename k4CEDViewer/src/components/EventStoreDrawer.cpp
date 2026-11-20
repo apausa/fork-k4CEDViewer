@@ -181,3 +181,9 @@ bool k4ced::drawCollection(const std::string& name, const podio::CollectionBase&
 
   return false;
 }
+
+void k4ced::drawEventStore() {
+  for (const auto& [name, coll] : getEventStoreCollections()) {
+    drawCollection(name, *coll);
+  }
+}
