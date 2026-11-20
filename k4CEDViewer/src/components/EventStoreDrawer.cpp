@@ -1,5 +1,7 @@
 #include "EventStoreDrawer.h"
 
+#include "DrawingAlgorithms.h"
+#include "k4GaudiCED.h"
 #include "k4GaudiCEDUtils.h" // warning()
 
 #include "k4FWCore/DataWrapper.h"     // DataWrapperBase
@@ -64,4 +66,20 @@ std::vector<std::pair<std::string, const podio::CollectionBase*>> k4ced::getEven
   }
 
   return collections;
+}
+
+bool k4ced::drawCollection(const std::string& name, const podio::CollectionBase& coll) {
+  const auto type = coll.getTypeName();
+
+  // Draw SimTrackerHits
+  if (type == edm4hep::SimTrackerHitCollection::typeName) {
+    const SimTrackerHitsParams params{};
+
+    k4GaudiCED::add_layer_description(name, params.layer);
+    drawSimTrackerHits(static_cast<const edm4hep::SimTrackerHitCollection&>(coll), params);
+
+    return true;
+  }
+
+  return false;
 }
