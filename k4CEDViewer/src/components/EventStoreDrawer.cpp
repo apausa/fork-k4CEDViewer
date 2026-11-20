@@ -81,5 +81,103 @@ bool k4ced::drawCollection(const std::string& name, const podio::CollectionBase&
     return true;
   }
 
+  // Draw SimCalorimeterHits
+  else if (type == edm4hep::SimCalorimeterHitCollection::typeName) {
+    const SimCalorimeterHitsParams params{};
+
+    k4GaudiCED::add_layer_description(name, params.layer);
+    drawSimCalorimeterHits(static_cast<const edm4hep::SimCalorimeterHitCollection&>(coll), params);
+
+    return true;
+  }
+
+  // Draw Vertices
+  else if (type == edm4hep::VertexCollection::typeName) {
+    const VerticesParams params{};
+
+    k4GaudiCED::add_layer_description(name, params.layer);
+    drawVertices(static_cast<const edm4hep::VertexCollection&>(coll), params, 0);
+
+    return true;
+  }
+
+  // Draw CalorimeterHits
+  else if (type == edm4hep::CalorimeterHitCollection::typeName) {
+    const CalorimeterHitsParams params{};
+
+    k4GaudiCED::add_layer_description(name, params.layer);
+    drawCalorimeterHits(static_cast<const edm4hep::CalorimeterHitCollection&>(coll), params);
+
+    return true;
+  }
+
+  // Draw TrackerHit3Ds
+  else if (type == edm4hep::TrackerHit3DCollection::typeName) {
+    const TrackerHitsParams params{};
+
+    k4GaudiCED::add_layer_description(name, params.layer);
+    drawTrackerHits(static_cast<const edm4hep::TrackerHit3DCollection&>(coll), params);
+
+    return true;
+  }
+
+  // Draw TrackerHitPlanes
+  else if (type == edm4hep::TrackerHitPlaneCollection::typeName) {
+    const TrackerHitsParams params{};
+
+    k4GaudiCED::add_layer_description(name, params.layer);
+    drawTrackerHits(static_cast<const edm4hep::TrackerHitPlaneCollection&>(coll), params);
+
+    return true;
+  }
+
+  // Draw MCParticles
+  else if (type == edm4hep::MCParticleCollection::typeName) {
+    const MCParticlesParams params{};
+
+    drawMCParticles(static_cast<const edm4hep::MCParticleCollection&>(coll), name, params);
+
+    return true;
+  }
+
+  // Draw Tracks
+  else if (type == edm4hep::TrackCollection::typeName) {
+    TracksParams params{};
+    params.drawHelixForTracks = 0; // @check first track state
+
+    drawTracks(static_cast<const edm4hep::TrackCollection&>(coll), name, params);
+
+    return true;
+  }
+
+  // Draw Clusters
+  else if (type == edm4hep::ClusterCollection::typeName) {
+    const ClustersParams params{};
+
+    k4GaudiCED::add_layer_description(name, params.layer);
+    drawClusters(static_cast<const edm4hep::ClusterCollection&>(coll), params);
+
+    return true;
+  }
+
+  // Draw Jets or ReconstructedParticles
+  else if (type == edm4hep::ReconstructedParticleCollection::typeName) {
+    const auto& particles = static_cast<const edm4hep::ReconstructedParticleCollection&>(coll);
+
+    if (name.find("Jet") != std::string::npos) {
+      const JetsParams params{};
+
+      k4GaudiCED::add_layer_description(name, params.layer);
+      drawJets(particles, params);
+    } else {
+      const ReconstructedParticlesParams params{};
+
+      k4GaudiCED::add_layer_description(name, params.layer);
+      drawReconstructedParticles(particles, params);
+    }
+
+    return true;
+  }
+
   return false;
 }
