@@ -2,6 +2,7 @@
 
 #include "k4GaudiCEDUtils.h" // warning()
 
+#include "k4FWCore/DataWrapper.h"     // DataWrapperBase
 #include "k4FWCore/FunctionalUtils.h" // frameLocation
 
 #include "GaudiKernel/AnyDataWrapper.h"
@@ -47,13 +48,19 @@ std::vector<std::pair<std::string, const podio::CollectionBase*>> k4ced::getEven
       continue; // Skip the "/_Frame" entry from k4FWCore
     }
 
-    const auto* wrapper = dynamic_cast<AnyDataWrapper<std::unique_ptr<podio::CollectionBase>>*>(leaf->object());
+    const podio::CollectionBase* collection = nullptr;
 
-    if (!wrapper) {
+    if (const auto* wrapper = dynamic_cast<AnyDataWrapper<std::unique_ptr<podio::CollectionBase>>*>(leaf->object())) {
+      collection = wrapper->getData().get();
+    } else if (auto* oldWrapper = dynamic_cast<DataWrapperBase*>(leaf->object())) {
+      collection = oldWrapper->collectionBase(); // Fallback for older wrapper
+    }
+
+    if (!collection) {
       continue; // Skip collections that are not wrapped
     }
 
-    collections.emplace_back(leaf->name().substr(1), wrapper->getData().get()); // Remove the leading "/"
+    collections.emplace_back(leaf->name().substr(1), collection); // Remove the leading "/"
   }
 
   return collections;
