@@ -4,6 +4,7 @@
 
 #include "k4FWCore/FunctionalUtils.h" // frameLocation
 
+#include "GaudiKernel/AnyDataWrapper.h"
 #include "GaudiKernel/Bootstrap.h"
 #include "GaudiKernel/DataObject.h"
 #include "GaudiKernel/IDataManagerSvc.h"
@@ -13,7 +14,9 @@
 #include "GaudiKernel/SmartDataPtr.h"
 #include "GaudiKernel/SmartIF.h"
 
-std::vector<std::string> k4ced::getEventStoreCollections() {
+#include <memory> //  std::unique_ptr.
+
+std::vector<std::pair<std::string, const podio::CollectionBase*>> k4ced::getEventStoreCollections() {
   // Get the event store
   auto eventSvc = Gaudi::svcLocator()->service<IDataProviderSvc>("EventDataSvc");
 
@@ -37,15 +40,21 @@ std::vector<std::string> k4ced::getEventStoreCollections() {
     return {};
   }
 
-  // Keep the entry names that are collections
-  std::vector<std::string> names;
+  // Keep the entries that are collections
+  std::vector<std::pair<std::string, const podio::CollectionBase*>> collections;
   for (const auto* leaf : leaves) {
     if (leaf->name() == k4FWCore::frameLocation) {
       continue; // Skip the "/_Frame" entry from k4FWCore
     }
 
-    names.push_back(leaf->name().substr(1)); // Remove the leading "/"
+    const auto* wrapper = dynamic_cast<AnyDataWrapper<std::unique_ptr<podio::CollectionBase>>*>(leaf->object());
+
+    if (!wrapper) {
+      continue; // Skip collections that are not wrapped
+    }
+
+    collections.emplace_back(leaf->name().substr(1), wrapper->getData().get()); // Remove the leading "/"
   }
 
-  return names;
+  return collections;
 }
