@@ -7,6 +7,8 @@
 #include "k4FWCore/DataWrapper.h"     // DataWrapperBase
 #include "k4FWCore/FunctionalUtils.h" // frameLocation
 
+#include "DD4hep/Detector.h"
+
 #include "GaudiKernel/AnyDataWrapper.h"
 #include "GaudiKernel/Bootstrap.h"
 #include "GaudiKernel/DataObject.h"
@@ -18,6 +20,10 @@
 #include "GaudiKernel/SmartIF.h"
 
 #include <memory> //  std::unique_ptr.
+#include <set>
+
+// Logo of collection names already drawn in the event
+static std::set<std::string> drawnCollections;
 
 std::vector<std::pair<std::string, const podio::CollectionBase*>> k4ced::getEventStoreCollections() {
   // Get the event store
@@ -183,7 +189,20 @@ bool k4ced::drawCollection(const std::string& name, const podio::CollectionBase&
 }
 
 void k4ced::drawEventStore() {
+  if (drawnCollections.empty()) {
+    k4GaudiCED::clearEvent();
+    k4GaudiCED::drawDD4hepDetector(dd4hep::Detector::getInstance(), false, {});
+  }
+
   for (const auto& [name, coll] : getEventStoreCollections()) {
-    drawCollection(name, *coll);
+    if (drawnCollections.contains(name)) {
+      continue; // Already drawn at an earlier stop
+    }
+
+    if (drawCollection(name, *coll)) {
+      drawnCollections.insert(name);
+    }
   }
 }
+
+void k4ced::resetEventStore() { drawnCollections.clear(); }

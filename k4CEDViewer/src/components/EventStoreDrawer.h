@@ -17,4 +17,7 @@ bool drawCollection(const std::string& name, const podio::CollectionBase& coll);
 // Draws every collection from the Gaudi event store
 void drawEventStore();
 
+// Resets the log of drawn collections so the next event is drawn
+void resetEventStore();
+
 } // namespace k4ced
