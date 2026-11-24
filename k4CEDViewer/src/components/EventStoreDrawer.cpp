@@ -199,6 +199,10 @@ void k4ced::drawEventStore() {
       continue; // Already drawn at an earlier stop
     }
 
+    if (coll->isSubsetCollection()) {
+      continue; // Already drawn in a parent collection
+    }
+
     if (drawCollection(name, *coll)) {
       drawnCollections.insert(name);
     }
