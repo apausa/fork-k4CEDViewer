@@ -19,6 +19,7 @@
 #include "GaudiKernel/SmartDataPtr.h"
 #include "GaudiKernel/SmartIF.h"
 
+#include <exception>
 #include <memory> //  std::unique_ptr.
 #include <set>
 
@@ -189,12 +190,25 @@ bool k4ced::drawCollection(const std::string& name, const podio::CollectionBase&
 }
 
 void k4ced::drawEventStore() {
+  dd4hep::Detector& detector = dd4hep::Detector::getInstance();
+  const bool isGeometryLoaded = detector.state() == dd4hep::Detector::READY;
+
   if (drawnCollections.empty()) {
     k4GaudiCED::clearEvent();
-    k4GaudiCED::drawDD4hepDetector(dd4hep::Detector::getInstance(), false, {});
+
+    // @fix perhaps it's better to stop the program in case detector geometry is not loaded or to decouple elements from
+    // detector
+    if (isGeometryLoaded) {
+      k4GaudiCED::drawDD4hepDetector(detector, false, {});
+    } else {
+      warning() << "No geometry loaded: skipping the detector, MCParticles, Tracks and ReconstructedParticles"
+                << std::endl;
+    }
   }
 
   for (const auto& [name, coll] : getEventStoreCollections()) {
+    const auto type = coll->getTypeName();
+
     if (drawnCollections.contains(name)) {
       continue; // Already drawn at an earlier stop
     }
@@ -203,9 +217,19 @@ void k4ced::drawEventStore() {
       continue; // Already drawn in a parent collection
     }
 
-    if (drawCollection(name, *coll)) {
-      drawnCollections.insert(name);
+    if (!isGeometryLoaded &&
+        (type == edm4hep::MCParticleCollection::typeName || type == edm4hep::TrackCollection::typeName ||
+         type == edm4hep::ReconstructedParticleCollection::typeName)) {
+      continue; // Drawing these needs the detector geometry
     }
+
+    try {
+      drawCollection(name, *coll);
+    } catch (const std::exception& e) {
+      warning() << "Cannot draw " << name << ": " << e.what() << std::endl;
+    }
+
+    drawnCollections.insert(name);
   }
 }
 
