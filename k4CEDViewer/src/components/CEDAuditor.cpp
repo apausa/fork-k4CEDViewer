@@ -1,7 +1,10 @@
 #include "Gaudi/Auditor.h"
 #include "Gaudi/Property.h"
 
+#include "EventStoreDrawer.h"
 #include "k4GaudiCED.h"
+
+#include "GaudiKernel/EventContext.h"
 
 #include <algorithm>
 #include <string>
@@ -14,6 +17,8 @@ struct CEDAuditor final : Gaudi::Auditor {
   Gaudi::Property<std::vector<std::string>> stopAfterSome{this, "StopAfterSome", {}, "Stop after these algorithms"};
   Gaudi::Property<bool> stepThroughEvery{this, "StepThroughEvery", false, "Stop after every "};
 
+  EventContext::ContextEvt_t currentEvent = EventContext::INVALID_CONTEXT_EVT;
+
   StatusCode initialize() override {
     // Only connect auditor to glced if it is set up
     if (!stopAfterSome.value().empty() || stepThroughEvery) {
@@ -22,6 +27,14 @@ struct CEDAuditor final : Gaudi::Auditor {
     }
 
     return StatusCode::SUCCESS;
+  }
+
+  void before(const std::string& event, const std::string&, const EventContext& ctx) override {
+    // Reset what was drawn before the first algorithm of a new event
+    if (event == IAuditor::Execute && ctx.evt() != currentEvent) {
+      currentEvent = ctx.evt();
+      k4ced::resetEventStore();
+    }
   }
 
   void after(const std::string& event, const std::string& caller, const EventContext&, const StatusCode&) override {
