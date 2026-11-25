@@ -148,6 +148,8 @@ void k4GaudiCED::newEvent(const void* proc) {
   if (proc == instance()->_first) {
     clearEvent();
   }
+
+  instance()->_eventStarted = true;
 }
 
 void k4GaudiCED::sendEvent() {
@@ -226,6 +228,10 @@ void k4GaudiCED::draw(const void* proc) {
 }
 
 void k4GaudiCED::letAuditorWait() { instance()->_auditorWaits = true; }
+
+bool k4GaudiCED::isEventStarted() { return instance()->_eventStarted; }
+
+void k4GaudiCED::resetEventStarted() { instance()->_eventStarted = false; }
 
 /**
  * Improved drawHelix() method. Draws straight lines as well.

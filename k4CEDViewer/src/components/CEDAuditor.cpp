@@ -34,6 +34,7 @@ struct CEDAuditor final : Gaudi::Auditor {
     if (event == IAuditor::Execute && ctx.evt() != currentEvent) {
       currentEvent = ctx.evt();
       k4ced::resetEventStore();
+      k4ced::k4GaudiCED::resetEventStarted();
     }
   }
 

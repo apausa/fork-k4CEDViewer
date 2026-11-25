@@ -160,6 +160,12 @@ public:
   // If a breakpont is set then the auditor takes over the waiting from the draw algorithms
   static void letAuditorWait();
 
+  // True if a collection in the event has been drawn
+  static bool isEventStarted();
+
+  // Called by the custom auditor when a new event starts
+  static void resetEventStarted();
+
   //==  static void getParticleFromID(int, LCEvent*);
 
   /** Draw all objects in iterator range [first,last) which have a method getPosition() with the given color marker and
@@ -235,6 +241,7 @@ protected:
   const void* _last = NULL;
   bool _connected = false;
   bool _auditorWaits = false;
+  bool _eventStarted = false;
 
   // // helper method to draw hit collections by type
   // static void drawHitCollectionsByType(LCEvent* event, const char* type, int marker, int size,
