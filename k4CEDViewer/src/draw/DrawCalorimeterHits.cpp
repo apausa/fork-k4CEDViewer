@@ -88,7 +88,7 @@ struct DrawCalorimeterHits final
     for (const auto* col : collections) {
       drawCalorimeterHits(*col, params);
     }
-    k4GaudiCED::draw(this, 1);
+    k4GaudiCED::draw(this);
   }
 };
 

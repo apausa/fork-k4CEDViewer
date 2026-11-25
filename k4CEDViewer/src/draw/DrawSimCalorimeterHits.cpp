@@ -94,7 +94,7 @@ struct DrawSimCalorimeterHits final
       drawSimCalorimeterHits(*col, params);
     }
 
-    k4GaudiCED::draw(this, 1);
+    k4GaudiCED::draw(this);
   }
 };
 

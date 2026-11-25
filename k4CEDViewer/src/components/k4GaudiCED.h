@@ -153,10 +153,9 @@ public:
   static void processInput();
 
   /** To be called by every processor that uses CED in processEvent() after drawing everything.
-   * The flag waitForKeyboard indicates if after an event is drawn,
-   * an input from the keyboard is expected (waitForKeyboard=1) or not (waitForKeyboard=0).
-   */
-  static void draw(const void* proc, int waitForKeyboard = 1);
+   * The last one sends the event and waits for input.
+   **/
+  static void draw(const void* proc);
 
   // If a breakpont is set then the auditor takes over the waiting from the draw algorithms
   static void letAuditorWait();

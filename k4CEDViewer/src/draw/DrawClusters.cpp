@@ -287,7 +287,7 @@ struct DrawClusters final : k4FWCore::Consumer<void(const edm4hep::ClusterCollec
 
     drawClusters(col, params);
 
-    k4GaudiCED::draw(this, 1);
+    k4GaudiCED::draw(this);
   }
 
   int returnRGBClusterColor(float eneCluster, float cutoff_min, float cutoff_max, int color_steps, char scale,

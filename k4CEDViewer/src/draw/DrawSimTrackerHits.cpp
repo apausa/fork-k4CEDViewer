@@ -94,7 +94,7 @@ struct DrawSimTrackerHits final
       drawSimTrackerHits(*col, params);
     }
 
-    k4GaudiCED::draw(this, 1);
+    k4GaudiCED::draw(this);
   }
 };
 

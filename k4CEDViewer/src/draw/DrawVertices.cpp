@@ -88,7 +88,7 @@ struct DrawVertices final : k4FWCore::Consumer<void(const std::vector<const edm4
       drawVertices(*col, params, ic++);
     }
 
-    k4GaudiCED::draw(this, 1);
+    k4GaudiCED::draw(this);
   }
 };
 

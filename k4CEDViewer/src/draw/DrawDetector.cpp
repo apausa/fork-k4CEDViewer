@@ -59,7 +59,7 @@ struct DrawDetector final : k4FWCore::Consumer<void(const edm4hep::MCParticleCol
 
     //------------------------
 
-    k4GaudiCED::draw(this, 1);
+    k4GaudiCED::draw(this);
   }
 };
 

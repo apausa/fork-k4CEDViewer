@@ -216,10 +216,10 @@ void k4GaudiCED::processInput() {
   info() << "--------- END ---------------\n";
 }
 
-void k4GaudiCED::draw(const void* proc, int waitForKeyboard) {
+void k4GaudiCED::draw(const void* proc) {
   if (proc == instance()->_last) {
     sendEvent();
-    if (waitForKeyboard == 1 && !instance()->_auditorWaits) {
+    if (!instance()->_auditorWaits) {
       processInput();
     }
   }

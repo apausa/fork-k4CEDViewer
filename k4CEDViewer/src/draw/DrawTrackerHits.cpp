@@ -109,7 +109,7 @@ struct DrawTrackerHits final : k4FWCore::Consumer<void(const std::vector<const e
       drawTrackerHits(*col, params);
     }
 
-    k4GaudiCED::draw(this, 1);
+    k4GaudiCED::draw(this);
   }
 };
 

@@ -194,7 +194,7 @@ struct DrawTracks final : k4FWCore::Consumer<void(const edm4hep::TrackCollection
 
     drawTracks(col, inputLocations(0)[0], params);
 
-    k4GaudiCED::draw(this, 1);
+    k4GaudiCED::draw(this);
   }
 };
 
