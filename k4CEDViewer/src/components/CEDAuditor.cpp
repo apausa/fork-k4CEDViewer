@@ -1,6 +1,8 @@
 #include "Gaudi/Auditor.h"
 #include "Gaudi/Property.h"
 
+#include "k4GaudiCED.h"
+
 #include <string>
 #include <vector>
 
@@ -10,6 +12,15 @@ struct CEDAuditor final : Gaudi::Auditor {
 
   Gaudi::Property<std::vector<std::string>> stopAfterSome{this, "StopAfterSome", {}, "Stop after these algorithms"};
   Gaudi::Property<bool> stepThroughEvery{this, "StepThroughEvery", false, "Stop after every "};
+
+  StatusCode initialize() override {
+    // Only connect auditor to glced if it is set up
+    if (!stopAfterSome.value().empty() || stepThroughEvery) {
+      k4ced::k4GaudiCED::connect();
+    }
+
+    return StatusCode::SUCCESS;
+  }
 };
 
 DECLARE_COMPONENT(CEDAuditor)
