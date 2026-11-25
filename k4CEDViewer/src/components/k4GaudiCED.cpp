@@ -219,11 +219,13 @@ void k4GaudiCED::processInput() {
 void k4GaudiCED::draw(const void* proc, int waitForKeyboard) {
   if (proc == instance()->_last) {
     sendEvent();
-    if (waitForKeyboard == 1) {
+    if (waitForKeyboard == 1 && !instance()->_auditorWaits) {
       processInput();
     }
   }
 }
+
+void k4GaudiCED::letAuditorWait() { instance()->_auditorWaits = true; }
 
 /**
  * Improved drawHelix() method. Draws straight lines as well.

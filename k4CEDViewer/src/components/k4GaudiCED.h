@@ -158,6 +158,9 @@ public:
    */
   static void draw(const void* proc, int waitForKeyboard = 1);
 
+  // If a breakpont is set then the auditor takes over the waiting from the draw algorithms
+  static void letAuditorWait();
+
   //==  static void getParticleFromID(int, LCEvent*);
 
   /** Draw all objects in iterator range [first,last) which have a method getPosition() with the given color marker and
@@ -232,6 +235,7 @@ protected:
   const void* _first = NULL;
   const void* _last = NULL;
   bool _connected = false;
+  bool _auditorWaits = false;
 
   // // helper method to draw hit collections by type
   // static void drawHitCollectionsByType(LCEvent* event, const char* type, int marker, int size,

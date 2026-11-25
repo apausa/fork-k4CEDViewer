@@ -17,6 +17,7 @@ struct CEDAuditor final : Gaudi::Auditor {
     // Only connect auditor to glced if it is set up
     if (!stopAfterSome.value().empty() || stepThroughEvery) {
       k4ced::k4GaudiCED::connect();
+      k4ced::k4GaudiCED::letAuditorWait();
     }
 
     return StatusCode::SUCCESS;
