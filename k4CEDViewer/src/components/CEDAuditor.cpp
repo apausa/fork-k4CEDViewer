@@ -3,6 +3,7 @@
 
 #include "k4GaudiCED.h"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -21,6 +22,28 @@ struct CEDAuditor final : Gaudi::Auditor {
     }
 
     return StatusCode::SUCCESS;
+  }
+
+  void after(const std::string& event, const std::string& caller, const EventContext&, const StatusCode&) override {
+    try {
+      // Only execute breakpoint after an algorithm has ran
+      if (event != IAuditor::Execute) {
+        return;
+      }
+
+      const auto& names = stopAfterSome.value();
+
+      // Only execute breakpoint for predefined algorithms
+      if (std::find(names.begin(), names.end(), caller) == names.end()) {
+        return;
+      }
+
+      // Take over draw() responsibilities
+      k4ced::k4GaudiCED::sendEvent();
+      k4ced::k4GaudiCED::processInput();
+    } catch (...) {
+      error() << "Stop after " << caller << " failed" << endmsg;
+    }
   }
 };
 
