@@ -52,7 +52,12 @@ struct CEDAuditor final : Gaudi::Auditor {
         return;
       }
 
-      // Take over draw() responsibilities
+      // Draw current event store
+      if (!k4ced::k4GaudiCED::isEventStarted()) {
+        k4ced::drawEventStore();
+      }
+
+      // Send data to CED server and listen for user feedback
       k4ced::k4GaudiCED::sendEvent();
       k4ced::k4GaudiCED::processInput();
     } catch (...) {
