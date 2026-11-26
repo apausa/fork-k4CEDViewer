@@ -3,6 +3,7 @@
 
 #include "EventStoreDrawer.h"
 #include "k4GaudiCED.h"
+#include "k4GaudiCEDUtils.h"
 
 #include "GaudiKernel/EventContext.h"
 
@@ -51,6 +52,10 @@ struct CEDAuditor final : Gaudi::Auditor {
       if (std::find(names.begin(), names.end(), caller) == names.end()) {
         return;
       }
+
+      // Avoid unnecessary debug lines
+      k4ced::GlobalLog::instance().level() = msgLevel();
+      k4ced::GlobalLog::instance().name() = name();
 
       // Draw current event store
       if (!k4ced::k4GaudiCED::isEventStarted()) {
