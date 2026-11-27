@@ -149,8 +149,11 @@ public:
   // Sends what has been drawn so far from the event to glced.
   static void sendEvent();
 
+  // What the user asked for at the prompt
+  enum class Input { Continue, Quit };
+
   // Waits for user input. Double-clicked objects are printed while waiting.
-  static void processInput(const std::string& message);
+  static Input processInput(const std::string& message);
 
   /** To be called by every processor that uses CED in processEvent() after drawing everything.
    * The last one sends the event and waits for input.

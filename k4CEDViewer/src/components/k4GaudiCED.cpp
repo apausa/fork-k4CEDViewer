@@ -160,7 +160,7 @@ void k4GaudiCED::sendEvent() {
   ced_send_event();
 }
 
-void k4GaudiCED::processInput(const std::string& message) {
+k4GaudiCED::Input k4GaudiCED::processInput(const std::string& message) {
   int i = 0;
 
   // Drop previously registered double-clicks, as they could point to the wrong object
@@ -208,14 +208,20 @@ void k4GaudiCED::processInput(const std::string& message) {
   logLevel = oldLogLevel;
 
   signal(SIGWINCH, SIG_IGN);
+
   int c = getchar();
+  Input input = Input::Continue;
 
   if (c == 'q' || c == 'Q' || c == 3) { // end the job after this event if the user pressed q or strg+c (3 = strg+c)
     if (Gaudi::svcLocator()->as<IEventProcessor>()->stopRun().isFailure()) {
       error() << "Could not stop the job" << endmsg;
     }
+
+    input = Input::Quit;
   }
   info() << "--------- END ---------------\n";
+
+  return input;
 }
 
 void k4GaudiCED::draw(const void* proc) {
