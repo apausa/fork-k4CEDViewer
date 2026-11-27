@@ -37,10 +37,6 @@
 #include <termios.h>
 #include <time.h>
 
-// for kbhit
-#include <sys/select.h>
-#include <termios.h>
-
 // for detector drawing (Thorben Quast)
 #include "DD4hep/DD4hepUnits.h"
 #include "DD4hep/Detector.h"
@@ -49,6 +45,11 @@
 #include "DDRec/SurfaceManager.h"
 #include "TColor.h"
 #include "TROOT.h"
+
+// for stopping the job
+#include "GaudiKernel/Bootstrap.h"
+#include "GaudiKernel/IEventProcessor.h"
+#include "GaudiKernel/ISvcLocator.h"
 
 #define endmsg std::endl
 
@@ -61,15 +62,6 @@ k4GaudiCED* k4GaudiCED::_me = 0;
 std::vector<std::string> k4GaudiCED::_descs(CED_MAX_LAYER, ""); // layer descriptions
 
 //--------------------------------------------------------------------------------------------------------
-
-int PickingHandler::kbhit(void) {
-  // http://stackoverflow.com/questions/448944/c-non-blocking-keyboard-input#448982
-  struct timeval tv = {0L, 0L};
-  fd_set fds;
-  FD_ZERO(&fds);
-  FD_SET(0, &fds);
-  return select(1, &fds, NULL, NULL, &tv);
-}
 
 void k4GaudiCED::add_layer_description(const std::string& desc, int layerID) {
   std::string tmp;
@@ -109,92 +101,143 @@ k4GaudiCED* k4GaudiCED::instance() {
   return _me;
 }
 
+void k4GaudiCED::connect() {
+  if (instance()->_connected) {
+    return;
+  }
+  instance()->_connected = true;
+
+  char *port, *host;
+  port = getenv("CED_PORT");
+  host = getenv("CED_HOST");
+  if ((port == NULL || port[0] == 0) && (host == NULL || host[0] == 0)) {
+    ced_client_init("localhost", 7286);
+  } else if (port == NULL || port[0] == 0) {
+    info() << "Use user defined host " << host << endmsg;
+    ced_client_init(host, 7286);
+  } else if (host == NULL || host[0] == 0) {
+    info() << "Use user defined port " << port << endmsg;
+    ced_client_init("localhost", atoi(port));
+  } else {
+    info() << "Use user defined host " << host << ", port " << port << endmsg;
+    ced_client_init(host, atoi(port));
+  }
+
+  ced_register_elements();
+}
+
 void k4GaudiCED::init(const void* proc) {
 
   if (instance()->_first == 0) {
 
     instance()->_first = proc;
 
-    char *port, *host;
-    port = getenv("CED_PORT");
-    host = getenv("CED_HOST");
-    if ((port == NULL || port[0] == 0) && (host == NULL || host[0] == 0)) {
-      ced_client_init("localhost", 7286);
-    } else if (port == NULL || port[0] == 0) {
-      info() << "Use user defined host " << host << endmsg;
-      ced_client_init(host, 7286);
-    } else if (host == NULL || host[0] == 0) {
-      info() << "Use user defined port " << port << endmsg;
-      ced_client_init("localhost", atoi(port));
-    } else {
-      info() << "Use user defined host " << host << ", port " << port << endmsg;
-      ced_client_init(host, atoi(port));
-    }
-
-    ced_register_elements();
+    connect();
   }
 
   instance()->_last = proc;
 }
 
-void k4GaudiCED::newEvent(const void* proc) {
-  if (proc == instance()->_first) {
-    ced_new_event();
+void k4GaudiCED::clearEvent() {
+  ced_new_event();
 
-    PickingHandler::instance().clear();
-  }
+  PickingHandler::instance().clear();
 }
 
-// hauke hoelbe modify 08.02.2010
-void k4GaudiCED::draw(const void* proc, int waitForKeyboard) {
+void k4GaudiCED::newEvent(const void* proc) {
+  if (proc == instance()->_first) {
+    clearEvent();
+  }
+
+  instance()->_eventStarted = true;
+}
+
+void k4GaudiCED::sendEvent() {
+  //    ced_draw_event();
+  k4GaudiCED::write_layer_description();
+  // ced_picking_text("test1 test2 test3");
+
+  ced_send_event();
+}
+
+k4GaudiCED::Input k4GaudiCED::processInput(const std::string& message) {
   int i = 0;
 
+  // Drop previously registered double-clicks, as they could point to the wrong object
+  while (ced_selected_id_noblock() != -1) {
+  }
+
+  // Always lower output level to info while waiting for input so double-clicks are logged
+  unsigned& logLevel = GlobalLog::instance().level();
+  const unsigned oldLogLevel = logLevel;
+
+  if (logLevel > LogLevel::Info) {
+    logLevel = LogLevel::Info;
+  }
+
+  info() << message << endmsg;
+  // test:
+
+  signal(SIGWINCH, SIG_IGN);
+
+  /// Wait for keyboard input, and every 100ms without input check for double-clicks.
+  struct pollfd keyboard = {0, POLLIN, 0};
+
+  while (poll(&keyboard, 1, 100) <= 0) {
+
+    int id = ced_selected_id_noblock();
+
+    if (id >= 0) {
+
+      debug() << "debug: got id: " << id << endmsg;
+
+      if (id == 0) {
+
+        warning() << "Picking nothing, or an object with ID 0!" << endmsg;
+
+      } else {
+
+        PickingHandler::instance().printObject(id);
+
+        ced_picking_text("test1 test2 test3", i++);
+        ced_send_event();
+      }
+    }
+  }
+
+  logLevel = oldLogLevel;
+
+  signal(SIGWINCH, SIG_IGN);
+
+  int c = getchar();
+  Input input = Input::Continue;
+
+  if (c == 'q' || c == 'Q' || c == 3) { // end the job after this event if the user pressed q or strg+c (3 = strg+c)
+    if (Gaudi::svcLocator()->as<IEventProcessor>()->stopRun().isFailure()) {
+      error() << "Could not stop the job" << endmsg;
+    }
+
+    input = Input::Quit;
+  }
+  info() << "--------- END ---------------\n";
+
+  return input;
+}
+
+void k4GaudiCED::draw(const void* proc) {
   if (proc == instance()->_last) {
-    //    ced_draw_event();
-    k4GaudiCED::write_layer_description();
-    // ced_picking_text("test1 test2 test3");
-
-    ced_send_event();
-    if (waitForKeyboard == 1) {
-      info() << "Double click for picking. Press <ENTER> for the next event." << endmsg;
-      // test:
-
-      signal(SIGWINCH, SIG_IGN);
-
-      while (!PickingHandler::kbhit()) {
-        //            while(!poll(pfd,1,0)){
-
-        usleep(100000); // micro seconds
-
-        int id = ced_selected_id_noblock();
-
-        if (id >= 0) {
-
-          debug() << "debug: got id: " << id << endmsg;
-
-          if (id == 0) {
-
-            warning() << "Picking nothing, or an object with ID 0!" << endmsg;
-
-          } else {
-
-            PickingHandler::instance().printObject(id);
-
-            ced_picking_text("test1 test2 test3", i++);
-            ced_send_event();
-          }
-        }
-      }
-
-      signal(SIGWINCH, SIG_IGN);
-      int c = getchar();
-      if (c == 'q' || c == 'Q' || c == 3) { // quit if the user pressed q or strg+c (3 = strg+c)
-        exit(0);
-      }
-      info() << "--------- END ---------------\n";
+    sendEvent();
+    if (!instance()->_auditorWaits) {
+      processInput("Double click for picking. Press <ENTER> for the next event.");
     }
   }
 }
+
+void k4GaudiCED::letAuditorWait() { instance()->_auditorWaits = true; }
+
+bool k4GaudiCED::isEventStarted() { return instance()->_eventStarted; }
+
+void k4GaudiCED::resetEventStarted() { instance()->_eventStarted = false; }
 
 /**
  * Improved drawHelix() method. Draws straight lines as well.

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+#include "DrawingAlgorithms.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 #include "k4CEDColors.h"
 #include "k4FWCore/Consumer.h"
@@ -29,6 +30,23 @@
 
 using namespace k4ced;
 
+void k4ced::drawSimTrackerHits(const edm4hep::SimTrackerHitCollection& col, const SimTrackerHitsParams& p) {
+  Colors colors(p.colorScheme);
+  unsigned myColID = PickingHandler::instance().colID() * k4ced::IDFactor;
+  printfun f = PrintEDM4hep<edm4hep::SimTrackerHitCollection>(col);
+  PickingHandler::instance().registerFunctor(myColID / IDFactor, f);
+
+  for (int i = 0, n = col.size(); i < n; i++) {
+    auto h = col.at(i);
+    // color code by MCParticle
+    const int mci = (h.getParticle().id().index ? h.getParticle().id().index : 0);
+    int color = colors.current()[mci % colors.size()];
+    int id = myColID + h.id().index;
+
+    ced_hit_ID(h.getPosition()[0], h.getPosition()[1], h.getPosition()[2], p.marker, p.layer, p.size, color, id);
+  }
+}
+
 struct DrawSimTrackerHits final
     : k4FWCore::Consumer<void(const std::vector<const edm4hep::SimTrackerHitCollection*>&)> {
   DrawSimTrackerHits(const std::string& name, ISvcLocator* svcLoc)
@@ -37,11 +55,13 @@ struct DrawSimTrackerHits final
     k4GaudiCED::init(this);
   }
 
-  Gaudi::Property<int> layer{this, "layer", 1, "layer to draw SimTrackerHits "};
-  Gaudi::Property<int> size{this, "size", 2, "size for drawning  SimTrackerHits "};
-  Gaudi::Property<int> marker{this, "marker", 0, "marker for drawning  SimTrackerHits "};
+  static constexpr SimTrackerHitsParams defaults{};
 
-  Gaudi::Property<unsigned> colorScheme{this, "colorScheme", 12,
+  Gaudi::Property<int> layer{this, "layer", defaults.layer, "layer to draw SimTrackerHits "};
+  Gaudi::Property<int> size{this, "size", defaults.size, "size for drawning  SimTrackerHits "};
+  Gaudi::Property<int> marker{this, "marker", defaults.marker, "marker for drawning  SimTrackerHits "};
+
+  Gaudi::Property<unsigned> colorScheme{this, "colorScheme", defaults.colorScheme,
                                         "Red:0,Orange:1,Plum:2,Violet:3,Blue:4,LightBlue:5,Aquamarine:6,Green:7,Olive:"
                                         "8,Yellow:9,Dark:10,Light:11,Classic:12"};
 
@@ -64,34 +84,17 @@ struct DrawSimTrackerHits final
 
     info() << endmsg;
 
-    Colors colors(colorScheme);
-
     //-----------------------
 
     k4GaudiCED::add_layer_description(sstr.str(), layer);
 
+    const SimTrackerHitsParams params{.layer = layer, .size = size, .marker = marker, .colorScheme = colorScheme};
+
     for (const auto* col : collections) {
-
-      unsigned myColID = PickingHandler::instance().colID() * k4ced::IDFactor;
-      printfun f = PrintEDM4hep<edm4hep::SimTrackerHitCollection>(*col);
-      PickingHandler::instance().registerFunctor(myColID / IDFactor, f);
-
-      for (int i = 0, n = col->size(); i < n; i++) {
-
-        auto h = col->at(i);
-
-        // color code by MCParticle
-        const int mci = (h.getParticle().id().index ? h.getParticle().id().index : 0);
-
-        int color = colors.current()[mci % colors.size()];
-
-        int id = myColID + h.id().index;
-
-        ced_hit_ID(h.getPosition()[0], h.getPosition()[1], h.getPosition()[2], marker, layer, size, color, id);
-      }
+      drawSimTrackerHits(*col, params);
     }
 
-    k4GaudiCED::draw(this, 1);
+    k4GaudiCED::draw(this);
   }
 };
 

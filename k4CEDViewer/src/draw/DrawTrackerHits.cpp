@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+#include "DrawingAlgorithms.h"
 #include "edm4hep/MCParticle.h"
 #include "edm4hep/TrackerHit3DCollection.h"
 #include "edm4hep/TrackerHitPlaneCollection.h"
@@ -31,6 +32,27 @@
 
 using namespace k4ced;
 
+template <class Collection>
+void k4ced::drawTrackerHits(const Collection& col, const TrackerHitsParams& p) {
+  //      debug() << "  will draw these hits : " << *col << endmsg ;
+
+  unsigned myColID = PickingHandler::instance().colID() * k4ced::IDFactor;
+  printfun f = PrintEDM4hep<Collection>(col);
+
+  PickingHandler::instance().registerFunctor(myColID / IDFactor, f);
+
+  for (int i = 0, n = col.size(); i < n; i++) {
+    auto h = col.at(i);
+    int id = myColID + h.id().index;
+
+    ced_hit_ID(h.getPosition()[0], h.getPosition()[1], h.getPosition()[2], p.marker, p.layer, p.size, p.color, id);
+  }
+}
+
+// Collection can be TrackerHit3DCollection or TrackerHitPlaneCollection
+template void k4ced::drawTrackerHits(const edm4hep::TrackerHit3DCollection& col, const TrackerHitsParams& p);
+template void k4ced::drawTrackerHits(const edm4hep::TrackerHitPlaneCollection& col, const TrackerHitsParams& p);
+
 struct DrawTrackerHits final : k4FWCore::Consumer<void(const std::vector<const edm4hep::TrackerHit3DCollection*>&,
                                                        const std::vector<const edm4hep::TrackerHitPlaneCollection*>&)> {
   DrawTrackerHits(const std::string& name, ISvcLocator* svcLoc)
@@ -41,10 +63,12 @@ struct DrawTrackerHits final : k4FWCore::Consumer<void(const std::vector<const e
     k4GaudiCED::init(this);
   }
 
-  Gaudi::Property<int> layer{this, "layer", 11, "layer to draw TrackerHits "};
-  Gaudi::Property<int> size{this, "size", 2, "size for drawning  TrackerHits "};
-  Gaudi::Property<int> marker{this, "marker", 0, "marker for drawning  TrackerHits "};
-  Gaudi::Property<int> color{this, "color", 0xee0000, "color for drawning  TrackerHits (default: 0xee0000)"};
+  static constexpr TrackerHitsParams defaults{};
+
+  Gaudi::Property<int> layer{this, "layer", defaults.layer, "layer to draw TrackerHits "};
+  Gaudi::Property<int> size{this, "size", defaults.size, "size for drawning  TrackerHits "};
+  Gaudi::Property<int> marker{this, "marker", defaults.marker, "marker for drawning  TrackerHits "};
+  Gaudi::Property<int> color{this, "color", defaults.color, "color for drawning  TrackerHits (default: 0xee0000)"};
 
   //===========================================================================================
 
@@ -75,43 +99,17 @@ struct DrawTrackerHits final : k4FWCore::Consumer<void(const std::vector<const e
 
     k4GaudiCED::add_layer_description(sstr.str(), layer);
 
+    const TrackerHitsParams params{.layer = layer, .size = size, .marker = marker, .color = color};
+
     for (const auto* col : cols3D) {
-
-      //      debug() << "  will draw these hits : " << *col << endmsg ;
-
-      unsigned myColID = PickingHandler::instance().colID() * k4ced::IDFactor;
-      printfun f = PrintEDM4hep<edm4hep::TrackerHit3DCollection>(*col);
-      PickingHandler::instance().registerFunctor(myColID / IDFactor, f);
-
-      for (int i = 0, n = col->size(); i < n; i++) {
-
-        auto h = col->at(i);
-
-        int id = myColID + h.id().index;
-
-        ced_hit_ID(h.getPosition()[0], h.getPosition()[1], h.getPosition()[2], marker, layer, size, color, id);
-      }
+      drawTrackerHits(*col, params);
     }
 
     for (const auto* col : colsPlane) {
-
-      //      debug() << "  will draw these hits : " << *col << endmsg ;
-
-      unsigned myColID = PickingHandler::instance().colID() * k4ced::IDFactor;
-      printfun f = PrintEDM4hep<edm4hep::TrackerHitPlaneCollection>(*col);
-      PickingHandler::instance().registerFunctor(myColID / IDFactor, f);
-
-      for (int i = 0, n = col->size(); i < n; i++) {
-
-        auto h = col->at(i);
-
-        int id = myColID + h.id().index;
-
-        ced_hit_ID(h.getPosition()[0], h.getPosition()[1], h.getPosition()[2], marker, layer, size, color, id);
-      }
+      drawTrackerHits(*col, params);
     }
 
-    k4GaudiCED::draw(this, 1);
+    k4GaudiCED::draw(this);
   }
 };
 

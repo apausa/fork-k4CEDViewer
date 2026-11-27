@@ -119,11 +119,6 @@ public:
     _map[colID] = fun;
   }
 
-  /** Returns 1 if a key was been pressed, otherwise 0.
-   * (Should be not part of PickingHandler)
-   */
-  static int kbhit(void);
-
   ~PickingHandler() {};
 };
 
@@ -138,17 +133,41 @@ public:
 
   //  LCEvent* _currEvent=NULL;
 
-  /** To be called by every processor that uses CED in intit().
+  // Sets up the CED client and registers its element types. Only the first call does anything.
+  static void connect();
+
+  /** To be called by every processor that uses CED in init().
    */
   static void init(const void* proc);
 
+  // Clears the previous event.
+  static void clearEvent();
+
+  // Starts a new event. Only the first algorithm does this, so all algorithms draw into the same event.
   static void newEvent(const void* proc);
 
+  // Sends what has been drawn so far from the event to glced.
+  static void sendEvent();
+
+  // What the user asked for at the prompt
+  enum class Input { Continue, Quit };
+
+  // Waits for user input. Double-clicked objects are printed while waiting.
+  static Input processInput(const std::string& message);
+
   /** To be called by every processor that uses CED in processEvent() after drawing everything.
-   *  Actually draws the event. The flag waitForKeyboard indicates if after an event is drawn
-   *  an input from the keyboard is expected (waitForKeyboard=1) or not (waitForKeyboard=0).
-   */
-  static void draw(const void* proc, int waitForKeyboard = 1);
+   * The last one sends the event and waits for input.
+   **/
+  static void draw(const void* proc);
+
+  // If a breakpont is set then the auditor takes over the waiting from the draw algorithms
+  static void letAuditorWait();
+
+  // True if a collection in the event has been drawn
+  static bool isEventStarted();
+
+  // Called by the custom auditor when a new event starts
+  static void resetEventStarted();
 
   //==  static void getParticleFromID(int, LCEvent*);
 
@@ -223,6 +242,9 @@ protected:
 
   const void* _first = NULL;
   const void* _last = NULL;
+  bool _connected = false;
+  bool _auditorWaits = false;
+  bool _eventStarted = false;
 
   // // helper method to draw hit collections by type
   // static void drawHitCollectionsByType(LCEvent* event, const char* type, int marker, int size,

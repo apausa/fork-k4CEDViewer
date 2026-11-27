@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+#include "DrawingAlgorithms.h"
 #include "edm4hep/MCParticle.h"
 #include "edm4hep/SimCalorimeterHitCollection.h"
 #include "k4CEDColors.h"
@@ -30,6 +31,23 @@
 
 using namespace k4ced;
 
+void k4ced::drawSimCalorimeterHits(const edm4hep::SimCalorimeterHitCollection& col, const SimCalorimeterHitsParams& p) {
+  Colors colors(p.colorScheme);
+  unsigned myColID = PickingHandler::instance().colID() * k4ced::IDFactor;
+  printfun f = PrintEDM4hep<edm4hep::SimCalorimeterHitCollection>(col);
+  PickingHandler::instance().registerFunctor(myColID / IDFactor, f);
+
+  for (int i = 0, n = col.size(); i < n; i++) {
+    auto h = col.at(i);
+    // color code by MCParticle
+    const int mci = (h.getContributions().size() ? h.getContributions(0).getParticle().id().index : 0);
+    int color = colors.current()[mci % colors.size()];
+    int id = myColID + h.id().index;
+
+    ced_hit_ID(h.getPosition()[0], h.getPosition()[1], h.getPosition()[2], p.marker, p.layer, p.size, color, id);
+  }
+}
+
 struct DrawSimCalorimeterHits final
     : k4FWCore::Consumer<void(const std::vector<const edm4hep::SimCalorimeterHitCollection*>&)> {
   DrawSimCalorimeterHits(const std::string& name, ISvcLocator* svcLoc)
@@ -38,11 +56,12 @@ struct DrawSimCalorimeterHits final
     k4GaudiCED::init(this);
   }
 
-  Gaudi::Property<int> layer{this, "layer", 2, "layer to draw SimCalorimeterHits "};
-  Gaudi::Property<int> size{this, "size", 2, "size for drawning  SimCalorimeterHits "};
-  Gaudi::Property<int> marker{this, "marker", 0, "marker for drawning  SimCalorimeterHits "};
+  static constexpr SimCalorimeterHitsParams defaults{};
 
-  Gaudi::Property<unsigned> colorScheme{this, "colorScheme", 12,
+  Gaudi::Property<int> layer{this, "layer", defaults.layer, "layer to draw SimCalorimeterHits "};
+  Gaudi::Property<int> size{this, "size", defaults.size, "size for drawning  SimCalorimeterHits "};
+  Gaudi::Property<int> marker{this, "marker", defaults.marker, "marker for drawning  SimCalorimeterHits "};
+  Gaudi::Property<unsigned> colorScheme{this, "colorScheme", defaults.colorScheme,
                                         "Red:0,Orange:1,Plum:2,Violet:3,Blue:4,LightBlue:5,Aquamarine:6,Green:7,Olive:"
                                         "8,Yellow:9,Dark:10,Light:11,Classic:12"};
 
@@ -65,34 +84,17 @@ struct DrawSimCalorimeterHits final
 
     info() << endmsg;
 
-    Colors colors(colorScheme);
-
     //-----------------------
 
     k4GaudiCED::add_layer_description(sstr.str(), layer);
 
+    const SimCalorimeterHitsParams params{.layer = layer, .size = size, .marker = marker, .colorScheme = colorScheme};
+
     for (const auto* col : collections) {
-
-      unsigned myColID = PickingHandler::instance().colID() * k4ced::IDFactor;
-      printfun f = PrintEDM4hep<edm4hep::SimCalorimeterHitCollection>(*col);
-      PickingHandler::instance().registerFunctor(myColID / IDFactor, f);
-
-      for (int i = 0, n = col->size(); i < n; i++) {
-
-        auto h = col->at(i);
-
-        // color code by MCParticle
-        const int mci = (h.getContributions().size() ? h.getContributions(0).getParticle().id().index : 0);
-
-        int color = colors.current()[mci % colors.size()];
-
-        int id = myColID + h.id().index;
-
-        ced_hit_ID(h.getPosition()[0], h.getPosition()[1], h.getPosition()[2], marker, layer, size, color, id);
-      }
+      drawSimCalorimeterHits(*col, params);
     }
 
-    k4GaudiCED::draw(this, 1);
+    k4GaudiCED::draw(this);
   }
 };
 
