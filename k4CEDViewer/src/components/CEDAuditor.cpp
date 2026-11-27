@@ -27,6 +27,7 @@ struct CEDAuditor final : Gaudi::Auditor {
 
   std::set<std::string> writers;
   bool isEventWritten = false;
+  bool isProgramClosed = false;
 
   StatusCode initialize() override {
     // Only connect auditor to glced if it is set up
@@ -65,7 +66,7 @@ struct CEDAuditor final : Gaudi::Auditor {
   void after(const std::string& event, const std::string& caller, const EventContext&, const StatusCode&) override {
     try {
       // Only execute breakpoint after an algorithm has ran
-      if (event != IAuditor::Execute) {
+      if (event != IAuditor::Execute || isProgramClosed) {
         return;
       }
 
@@ -96,8 +97,12 @@ struct CEDAuditor final : Gaudi::Auditor {
 
       // Send data to CED server and listen for user feedback
       k4ced::k4GaudiCED::sendEvent();
-      k4ced::k4GaudiCED::processInput("Breakpoint after " + caller +
-                                      ". Double click for picking. Press <ENTER> to continue.");
+      const auto input = k4ced::k4GaudiCED::processInput("Breakpoint after " + caller +
+                                                         ". Double click for picking. Press <ENTER> to continue.");
+
+      if (input == k4ced::k4GaudiCED::Input::Quit) {
+        isProgramClosed = true;
+      }
     } catch (...) {
       error() << "Stop after " << caller << " failed" << endmsg;
     }
