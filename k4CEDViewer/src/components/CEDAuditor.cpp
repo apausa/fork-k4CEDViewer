@@ -6,8 +6,11 @@
 #include "k4GaudiCEDUtils.h"
 
 #include "GaudiKernel/EventContext.h"
+#include "GaudiKernel/IAlgManager.h"
+#include "GaudiKernel/IAlgorithm.h"
 
 #include <algorithm>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -20,6 +23,8 @@ struct CEDAuditor final : Gaudi::Auditor {
 
   EventContext::ContextEvt_t currentEvent = EventContext::INVALID_CONTEXT_EVT;
 
+  std::set<std::string> toExclude;
+
   StatusCode initialize() override {
     // Only connect auditor to glced if it is set up
     if (!stopAfterSome.value().empty() || stepThroughEvery) {
@@ -31,6 +36,15 @@ struct CEDAuditor final : Gaudi::Auditor {
   }
 
   void before(const std::string& event, const std::string&, const EventContext& ctx) override {
+    // Skip all sequencers and the Reader when executing breakpoint for every algorithm
+    if (event == IAuditor::Execute && currentEvent == EventContext::INVALID_CONTEXT_EVT) {
+      for (const auto* alg : service<IAlgManager>("ApplicationMgr")->getAlgorithms()) {
+        if (alg->isSequence() || alg->type() == "Reader") {
+          toExclude.insert(alg->name());
+        }
+      }
+    }
+
     // Reset what was drawn before the first algorithm of a new event
     if (event == IAuditor::Execute && ctx.evt() != currentEvent) {
       currentEvent = ctx.evt();
@@ -49,7 +63,11 @@ struct CEDAuditor final : Gaudi::Auditor {
       const auto& names = stopAfterSome.value();
 
       // Only execute breakpoint for predefined algorithms
-      if (std::find(names.begin(), names.end(), caller) == names.end()) {
+      const bool isStopAfterSome = std::find(names.begin(), names.end(), caller) != names.end();
+      // Or execute breakpoint for every algorithm
+      const bool isStepThroughEvery = stepThroughEvery && !toExclude.contains(caller);
+
+      if (!isStopAfterSome && !isStepThroughEvery) {
         return;
       }
 
