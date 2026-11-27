@@ -160,7 +160,7 @@ void k4GaudiCED::sendEvent() {
   ced_send_event();
 }
 
-void k4GaudiCED::processInput() {
+void k4GaudiCED::processInput(const std::string& message) {
   int i = 0;
 
   // Drop previously registered double-clicks, as they could point to the wrong object
@@ -175,7 +175,7 @@ void k4GaudiCED::processInput() {
     logLevel = LogLevel::Info;
   }
 
-  info() << "Double click for picking. Press <ENTER> for the next event." << endmsg;
+  info() << message << endmsg;
   // test:
 
   signal(SIGWINCH, SIG_IGN);
@@ -222,7 +222,7 @@ void k4GaudiCED::draw(const void* proc) {
   if (proc == instance()->_last) {
     sendEvent();
     if (!instance()->_auditorWaits) {
-      processInput();
+      processInput("Double click for picking. Press <ENTER> for the next event.");
     }
   }
 }

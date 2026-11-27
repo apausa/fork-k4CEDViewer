@@ -96,7 +96,8 @@ struct CEDAuditor final : Gaudi::Auditor {
 
       // Send data to CED server and listen for user feedback
       k4ced::k4GaudiCED::sendEvent();
-      k4ced::k4GaudiCED::processInput();
+      k4ced::k4GaudiCED::processInput("Breakpoint after " + caller +
+                                      ". Double click for picking. Press <ENTER> to continue.");
     } catch (...) {
       error() << "Stop after " << caller << " failed" << endmsg;
     }

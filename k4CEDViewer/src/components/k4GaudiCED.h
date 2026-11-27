@@ -150,7 +150,7 @@ public:
   static void sendEvent();
 
   // Waits for user input. Double-clicked objects are printed while waiting.
-  static void processInput();
+  static void processInput(const std::string& message);
 
   /** To be called by every processor that uses CED in processEvent() after drawing everything.
    * The last one sends the event and waits for input.
