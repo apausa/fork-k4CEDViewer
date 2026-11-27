@@ -25,6 +25,9 @@ struct CEDAuditor final : Gaudi::Auditor {
 
   std::set<std::string> toExclude;
 
+  std::set<std::string> writers;
+  bool isEventWritten = false;
+
   StatusCode initialize() override {
     // Only connect auditor to glced if it is set up
     if (!stopAfterSome.value().empty() || stepThroughEvery) {
@@ -36,11 +39,16 @@ struct CEDAuditor final : Gaudi::Auditor {
   }
 
   void before(const std::string& event, const std::string&, const EventContext& ctx) override {
-    // Skip all sequencers and the Reader when executing breakpoint for every algorithm
     if (event == IAuditor::Execute && currentEvent == EventContext::INVALID_CONTEXT_EVT) {
       for (const auto* alg : service<IAlgManager>("ApplicationMgr")->getAlgorithms()) {
+        // Required for skipping all sequencers and the Reader when executing breakpoint for every algorithm
         if (alg->isSequence() || alg->type() == "Reader") {
           toExclude.insert(alg->name());
+        }
+
+        // Required for returning once the file is written in reconstruction
+        if (alg->type() == "Writer") {
+          writers.insert(alg->name());
         }
       }
     }
@@ -50,6 +58,7 @@ struct CEDAuditor final : Gaudi::Auditor {
       currentEvent = ctx.evt();
       k4ced::resetEventStore();
       k4ced::k4GaudiCED::resetEventStarted();
+      isEventWritten = false;
     }
   }
 
@@ -60,13 +69,18 @@ struct CEDAuditor final : Gaudi::Auditor {
         return;
       }
 
+      // In reconstruction, return when the event has been written and there is nothing left to run
+      if (isEventWritten || writers.contains(caller)) {
+        isEventWritten = true;
+        return;
+      }
+
       const auto& names = stopAfterSome.value();
 
-      // Only execute breakpoint for predefined algorithms
       const bool isStopAfterSome = std::find(names.begin(), names.end(), caller) != names.end();
-      // Or execute breakpoint for every algorithm
       const bool isStepThroughEvery = stepThroughEvery && !toExclude.contains(caller);
 
+      // Only execute breakpoint either for predefined algorithms or every algorithm
       if (!isStopAfterSome && !isStepThroughEvery) {
         return;
       }
